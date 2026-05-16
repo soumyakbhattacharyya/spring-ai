@@ -53,6 +53,27 @@ public class RAGController {
 		return ResponseEntity.ok(answer);
 	}
 
+	/**
+	 * 
+	 * This endpoint demonstrates a simple RAG implementation where the user's
+	 * message is used to retrieve similar documents from a vector store. The
+	 * retrieved documents are then provided as context to the chat client, which
+	 * generates a response based on both the user's message and the relevant
+	 * information from the documents. This allows for more informed and accurate
+	 * responses, as the chat client can leverage the additional context provided by
+	 * the retrieved documents.
+	 * 
+	 * Note: This method uses the @RetrievalAugemntationAdvisor configured in the
+	 * chat client, which means that the retrieval and augmentation process is
+	 * handled automatically by the advisor. The search request and document
+	 * retrieval logic are included here for demonstration purposes, but in a real
+	 * implementation, you would typically rely on the advisor to manage this
+	 * process seamlessly.
+	 * 
+	 * @param username
+	 * @param message
+	 * @return
+	 */
 	@GetMapping("/document/chat")
 	public ResponseEntity<String> documentChat(@RequestHeader("username") String username,
 			@RequestParam("message") String message) {
