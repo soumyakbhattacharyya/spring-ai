@@ -22,34 +22,44 @@ import java.util.List;
 @Configuration
 public class ChatMemoryChatClientConfig {
 
-    @Bean
-    ChatMemory chatMemory(JdbcChatMemoryRepository jdbcChatMemoryRepository) {
-        return MessageWindowChatMemory.builder().maxMessages(10)
-                .chatMemoryRepository(jdbcChatMemoryRepository).build();
-    }
+	@Bean
+	ChatMemory chatMemory(JdbcChatMemoryRepository jdbcChatMemoryRepository) {
+		return MessageWindowChatMemory.builder().maxMessages(10).chatMemoryRepository(jdbcChatMemoryRepository).build();
+	}
 
-    @Bean("chatMemoryChatClient")
-    public ChatClient chatClient(ChatClient.Builder chatClientBuilder, ChatMemory chatMemory
-    ,RetrievalAugmentationAdvisor  retrievalAugmentationAdvisor) {
-        Advisor loggerAdvisor = new SimpleLoggerAdvisor();
-        Advisor tokenUsageAdvisor = new TokenUsageAuditAdvisor();
-        Advisor memoryAdvisor = MessageChatMemoryAdvisor.builder(chatMemory).build();
-        return chatClientBuilder
-                .defaultAdvisors(List.of(loggerAdvisor, memoryAdvisor,tokenUsageAdvisor,
-                        retrievalAugmentationAdvisor))
-                .build();
-    }
+	@Bean("chatMemoryChatClient")
+	public ChatClient chatClient(ChatClient.Builder chatClientBuilder, ChatMemory chatMemory,
+			RetrievalAugmentationAdvisor retrievalAugmentationAdvisor) {
+		Advisor loggerAdvisor = new SimpleLoggerAdvisor();
+		Advisor tokenUsageAdvisor = new TokenUsageAuditAdvisor();
+		Advisor memoryAdvisor = MessageChatMemoryAdvisor.builder(chatMemory).build();
+		return chatClientBuilder
+				.defaultAdvisors(List.of(loggerAdvisor, memoryAdvisor, tokenUsageAdvisor, retrievalAugmentationAdvisor))
+				.build();
+	}
 
-    @Bean
-    RetrievalAugmentationAdvisor retrievalAugmentationAdvisor(VectorStore vectorStore,
-            ChatClient.Builder chatClientBuilder) {
-        return RetrievalAugmentationAdvisor.builder()
-                .queryTransformers(TranslationQueryTransformer.builder()
-                        .chatClientBuilder(chatClientBuilder.clone())
-                        .targetLanguage("english").build())
-                .documentRetriever(VectorStoreDocumentRetriever.builder().vectorStore(vectorStore)
-                        .topK(3).similarityThreshold(0.5).build())
-                .documentPostProcessors(PIIMaskingDocumentPostProcessor.builder())
-                .build();
-    }
+	/**
+	 * This shows the capability of a query transformer, a pre retrieval
+	 * transformation that can be used to transform the user's query before it's
+	 * sent to the retriever. In this example, we use a TranslationQueryTransformer
+	 * to translate the user's query into English before it's used for retrieval.
+	 * This can be particularly useful in scenarios where the retriever is optimized
+	 * for a specific language, allowing users to interact in their preferred
+	 * language while still benefiting from accurate retrieval results.
+	 * 
+	 * 
+	 * @param vectorStore
+	 * @param chatClientBuilder
+	 * @return
+	 */
+	@Bean
+	RetrievalAugmentationAdvisor retrievalAugmentationAdvisor(VectorStore vectorStore,
+			ChatClient.Builder chatClientBuilder) {
+		return RetrievalAugmentationAdvisor.builder()
+				.queryTransformers(TranslationQueryTransformer.builder().chatClientBuilder(chatClientBuilder.clone())
+						.targetLanguage("english").build())
+				.documentRetriever(VectorStoreDocumentRetriever.builder().vectorStore(vectorStore).topK(3)
+						.similarityThreshold(0.5).build())
+				.documentPostProcessors(PIIMaskingDocumentPostProcessor.builder()).build();
+	}
 }
